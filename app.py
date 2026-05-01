@@ -74,6 +74,7 @@ if section == "🏠 Overview":
     st.subheader("Real-Time Data")
     try:
         price = get_crypto_price()
+        st.write("DEBUG:", price)
         if price:
             st.metric("Bitcoin Price (USD)", f"${price:,.2f}")
         else:
