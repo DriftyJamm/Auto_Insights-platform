@@ -4,7 +4,13 @@ def get_crypto_price():
     url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
 
     try:
-        data = requests.get(url, timeout=5).json()
+        response = requests.get(url, timeout=5)
+
+        if response.status_code != 200:
+            return None
+
+        data = response.json()
         return data["bitcoin"]["usd"]
+
     except:
         return None
