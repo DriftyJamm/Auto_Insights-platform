@@ -5,12 +5,7 @@ def get_crypto_price():
 
     try:
         response = requests.get(url, timeout=5)
-
-        if response.status_code != 200:
-            return None
-
         data = response.json()
         return data["bitcoin"]["usd"]
-
     except:
         return None
