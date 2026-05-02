@@ -68,3 +68,5 @@ def train_model(df):
     # 🔥 SAVE MODEL HERE (IMPORTANT)
         st.session_state.model = best_model
         st.session_state.columns = X.columns
+
+return None, X
