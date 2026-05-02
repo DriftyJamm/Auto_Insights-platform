@@ -116,15 +116,7 @@ elif section == "🤖 Model":
     st.markdown("<div class='section-title'>Model Training</div>", unsafe_allow_html=True)
 
     if st.session_state.df is not None:
-        try:
-            model, X = train_model(st.session_state.df)
-
-            if model is not None:
-                st.session_state.model = model
-                st.session_state.columns = X.columns
-
-        except Exception as e:
-            st.error(f"Model Error: {e}")
+        train_model(st.session_state.df)
     else:
         st.warning("Upload dataset first")
 
