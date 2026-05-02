@@ -17,6 +17,9 @@ def train_model(df):
     # Select target
     target = st.selectbox("Select Target Column", df.columns)
 
+    if "customerID" in df.columns:
+        df = df.drop("customerID", axis=1)
+
     X = df.drop(target, axis=1)
     y = df[target]
 
