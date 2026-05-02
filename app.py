@@ -10,13 +10,14 @@ from src.auth import login, check_auth
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="AutoInsights", layout="wide")
+st.write("App started")
 
 # ---------------- LOGIN ----------------
-login()
+#login()
 
-if not check_auth():
-    st.warning("Please login to continue")
-    st.stop()
+#if not check_auth():
+    #st.warning("Please login to continue")
+    #st.stop()
 
 # ---------------- LOAD CSS ----------------
 def load_css():
@@ -26,7 +27,7 @@ def load_css():
     except:
         pass
 
-load_css()
+#load_css()
 
 # ---------------- HEADER ----------------
 st.markdown("<h1 style='text-align: center;'>🚀 AutoInsights Platform</h1>", unsafe_allow_html=True)
