@@ -116,7 +116,13 @@ elif section == "🤖 Model":
     st.markdown("<div class='section-title'>Model Training</div>", unsafe_allow_html=True)
 
     if st.session_state.df is not None:
+
         train_model(st.session_state.df)
+
+        # ✅ SHOW STATUS
+        if "model" in st.session_state:
+            st.success("✅ Model is trained and ready!")
+
     else:
         st.warning("Upload dataset first")
 
