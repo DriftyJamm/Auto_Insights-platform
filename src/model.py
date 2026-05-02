@@ -10,10 +10,10 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score
 
 def train_model(df):
     st.subheader("Model Selection & Comparison")
-
+    df = df.dropna()
     target = st.selectbox("Select Target Column", df.columns)
 
-    X = df.drop(columns=[target])
+    X = df.drop(target, axis=1)
     y = df[target]
 
     # Convert categorical to numeric
