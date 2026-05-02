@@ -121,28 +121,20 @@ elif section == "📊 EDA":
 
 # ---------------- MODEL ----------------
 elif section == "Model":
-    st.markdown("<div class='section-title'>Model Training</div>", unsafe_allow_html=True)
+    st.write("Entered Model Section")
 
     if st.session_state.df is not None:
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.write("Data exists")
 
         try:
-            st.write("Running model...")  # DEBUG
-
-            model, X = train_model(st.session_state.df)
-
-            st.write("Model trained")  # DEBUG
-
-            if model is not None:
-                st.session_state.model = model
-                st.session_state.columns = X.columns
+            st.write("Calling train_model...")
+            result = train_model(st.session_state.df)
+            st.write("Returned from function:", result)
 
         except Exception as e:
-            st.error(f"Model Error: {e}")
-
-        st.markdown("</div>", unsafe_allow_html=True)
+            st.error(f"Crash inside model: {e}")
     else:
-        st.warning("Upload dataset first")
+        st.warning("No data")
     #st.markdown("<div class='section-title'>Model Training</div>", unsafe_allow_html=True)
 
     #if st.session_state.df is not None:
