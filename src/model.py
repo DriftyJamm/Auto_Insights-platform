@@ -62,14 +62,9 @@ def train_model(df):
         results_df = pd.DataFrame(results)
 
         st.success("Models trained successfully!")
-
-        st.write("### 📊 Model Comparison")
         st.dataframe(results_df)
-
-        st.write(f"🏆 Best Model: {results_df.iloc[results_df['Accuracy'].idxmax()]['Model']}")
-
         st.bar_chart(results_df.set_index("Model")["Accuracy"])
 
-        return best_model, X
-
-    return None, X
+    # 🔥 SAVE MODEL HERE (IMPORTANT)
+        st.session_state.model = best_model
+        st.session_state.columns = X.columns
