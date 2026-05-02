@@ -130,7 +130,7 @@ elif section == "🤖 Model":
 elif section == "🔮 Prediction":
     st.markdown("<div class='section-title'>Prediction Interface</div>", unsafe_allow_html=True)
 
-    if "model" in st.session_state:
+    if "model" in st.session_state and st.session_state.model is not None:
         input_data = {}
         cols = st.columns(3)
 
