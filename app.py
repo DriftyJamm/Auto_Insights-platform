@@ -131,19 +131,57 @@ elif section == "🔮 Prediction":
     st.markdown("<div class='section-title'>Prediction Interface</div>", unsafe_allow_html=True)
 
     if "model" in st.session_state and st.session_state.model is not None:
-        input_data = {}
-        cols = st.columns(3)
 
-        for i, col in enumerate(st.session_state.columns):
-            input_data[col] = cols[i % 3].number_input(f"{col}")
+        st.markdown("### Enter Customer Details")
+
+        # -------- USER INPUT (CLEAN UI) --------
+        col1, col2 = st.columns(2)
+
+        with col1:
+            tenure = st.slider("Tenure (months)", 0, 72, 12)
+            monthly_charges = st.number_input("Monthly Charges", value=50.0)
+            senior = st.selectbox("Senior Citizen", [0, 1])
+
+        with col2:
+            gender = st.selectbox("Gender", ["Male", "Female"])
+            contract = st.selectbox("Contract Type", ["Month-to-month", "One year", "Two year"])
+            internet = st.selectbox("Internet Service", ["DSL", "Fiber optic", "No"])
+
+        # -------- CREATE INPUT DATA --------
+        input_dict = {
+            "tenure": tenure,
+            "monthly_charges": monthly_charges,
+            "SeniorCitizen": senior,
+            "gender": gender,
+            "Contract": contract,
+            "InternetService": internet
+        }
 
         if st.button("Predict"):
+
             try:
-                df_input = pd.DataFrame([input_data])
-                pred = st.session_state.model.predict(df_input)
-                st.success(f"Prediction Result: {pred[0]}")
-            except:
-                st.error("Input mismatch. Please retrain model.")
+                df_input = pd.DataFrame([input_dict])
+
+                # Convert to model format
+                df_input = pd.get_dummies(df_input)
+
+                # Match training columns
+                for col in st.session_state.columns:
+                    if col not in df_input:
+                        df_input[col] = 0
+
+                df_input = df_input[st.session_state.columns]
+
+                pred = st.session_state.model.predict(df_input)[0]
+
+                if pred in [1, "Yes"]:
+                    st.error("⚠️ Customer is likely to churn")
+                else:
+                    st.success("✅ Customer is not likely to churn")
+
+            except Exception as e:
+                st.error(f"Prediction error: {e}")
+
     else:
         st.warning("Train model first")
 
