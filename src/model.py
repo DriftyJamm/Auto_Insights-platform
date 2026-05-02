@@ -65,8 +65,8 @@ def train_model(df):
         st.dataframe(results_df)
         st.bar_chart(results_df.set_index("Model")["Accuracy"])
 
-    # 🔥 SAVE MODEL HERE (IMPORTANT)
+        # ✅ SAVE MODEL (VERY IMPORTANT)
         st.session_state.model = best_model
         st.session_state.columns = X.columns
 
-return None, X
+    return None, X
