@@ -171,7 +171,10 @@ elif section == "📈 Insights":
     if st.session_state.df is not None:
         st.markdown("<div class='card'>", unsafe_allow_html=True)
 
-        generate_insights(st.session_state.df, problem)
+        try:
+            generate_insights(st.session_state.df, problem)
+        except Exception as e:
+            st.error(f"Insights Error: {e}")
 
         # -------- PDF DOWNLOAD --------
         if st.button("Generate Report"):
