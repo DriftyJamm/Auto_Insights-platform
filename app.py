@@ -118,17 +118,39 @@ elif section == "🔮 Prediction":
 
     input_data = {}
 
-    # ✅ REMOVE DUPLICATES PROPERLY
-    unique_features = list(dict.fromkeys([
-        col.split("_")[0].strip() for col in top_features
-    ]))
+    # ---------------- IMPORTANT FEATURES ----------------
+    important_features = [
+        "tenure",
+        "MonthlyCharges",
+        "Contract",
+        "TechSupport",
+        "OnlineSecurity",
+        "PaymentMethod",
+        "Partner",
+        "Dependents"
+    ]
 
+    # Extract base feature names from model
+    model_features = [col.split("_")[0].strip() for col in top_features]
+
+    # Merge + remove duplicates
+    unique_features = list(dict.fromkeys(model_features + important_features))
+
+    # Keep only features present in dataset
+    unique_features = [f for f in unique_features if f in df.columns]
+
+    # Order important features first (clean UI)
+    priority_order = important_features
+
+    unique_features = (
+        [f for f in priority_order if f in unique_features] +
+        [f for f in unique_features if f not in priority_order]
+    )
+
+    # ---------------- UI LAYOUT ----------------
     left, right = st.columns(2)
 
     for i, base_col in enumerate(unique_features):
-
-        if base_col not in df.columns:
-            continue
 
         container = left if i % 2 == 0 else right
 
@@ -140,18 +162,18 @@ elif section == "🔮 Prediction":
                     float(df[base_col].min()),
                     float(df[base_col].max()),
                     float(df[base_col].mean()),
-                    key=f"{base_col}_{i}"  # ✅ FIX duplicate key
+                    key=f"{base_col}_{i}"
                 )
             else:
                 val = st.selectbox(
                     base_col,
                     df[base_col].dropna().unique(),
-                    key=f"{base_col}_{i}"  # ✅ FIX duplicate key
+                    key=f"{base_col}_{i}"
                 )
 
         input_data[base_col] = val
 
-    # -------- Prediction --------
+    # ---------------- PREDICTION ----------------
     if st.button("🚀 Predict"):
 
         df_input = pd.DataFrame([input_data])
@@ -167,18 +189,16 @@ elif section == "🔮 Prediction":
         pred = model.predict(df_input)[0]
 
         st.markdown("---")
-
-        # ✅ Safer output
         st.subheader("Prediction Result")
+
         st.write(f"Output: {pred}")
 
-        # Optional classification styling
         if str(pred).lower() in ["1", "yes", "true"]:
-            st.error("⚠️ High Risk")
+            st.error("⚠️ High Risk of Churn")
         else:
-            st.success("✅ Low Risk")
+            st.success("✅ Low Risk of Churn")
 
-        # Probability (if available)
+        # ---------------- CONFIDENCE ----------------
         if hasattr(model, "predict_proba"):
             prob = model.predict_proba(df_input)[0]
 
@@ -186,6 +206,11 @@ elif section == "🔮 Prediction":
             st.metric("Confidence", f"{confidence*100:.2f}%")
             st.progress(float(confidence))
 
+        # ---------------- WHY THIS PREDICTION ----------------
+        st.markdown("### 🔍 Key Inputs Used")
+
+        for k, v in input_data.items():
+            st.write(f"• {k}: {v}")
 # ---------------- INSIGHTS ----------------
 elif section == "📈 Insights":
 
