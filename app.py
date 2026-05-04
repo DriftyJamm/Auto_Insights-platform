@@ -18,13 +18,6 @@ if not check_auth():
     st.warning("Please login to continue")
     st.stop()
 
-# ---------------- STATUS BADGE ----------------
-st.markdown("""
-<div style="text-align:right; color:lightgreen;">
-🟢 System Active
-</div>
-""", unsafe_allow_html=True)
-
 # ---------------- HEADER ----------------
 st.markdown("<h1 style='text-align: center;'>🚀 AutoInsights Platform</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center;'>Turn Raw Data into Business Decisions</p>", unsafe_allow_html=True)
@@ -56,7 +49,6 @@ if "df" not in st.session_state:
 if section == "🏠 Overview":
 
     col1, col2, col3 = st.columns(3)
-
     col1.metric("Problems Supported", "4+")
     col2.metric("Models", "ML")
     col3.metric("Mode", "Real-Time")
@@ -125,37 +117,39 @@ elif section == "🔮 Prediction":
     st.write("### Enter Key Inputs")
 
     input_data = {}
-    cols = st.columns(2)
 
-    i = 0
+    # ✅ REMOVE DUPLICATES PROPERLY
+    unique_features = list(dict.fromkeys([
+        col.split("_")[0].strip() for col in top_features
+    ]))
 
-    for col in top_features:
+    left, right = st.columns(2)
 
-        base_col = col.split("_")[0]
-        base_col = base_col.strip()
+    for i, base_col in enumerate(unique_features):
 
         if base_col not in df.columns:
             continue
 
-        if pd.api.types.is_numeric_dtype(df[base_col]):
+        container = left if i % 2 == 0 else right
 
-            val = cols[i % 2].slider(
-                base_col,
-                float(df[base_col].min()),
-                float(df[base_col].max()),
-                float(df[base_col].mean()),
-                key=f"{base_col}_{i}"
-            )
+        with container:
 
-        else:
-            val = cols[i % 2].selectbox(
-                base_col,
-                df[base_col].dropna().unique(),
-                key=f"{base_col}_{i}"
-            )
+            if pd.api.types.is_numeric_dtype(df[base_col]):
+                val = st.slider(
+                    base_col,
+                    float(df[base_col].min()),
+                    float(df[base_col].max()),
+                    float(df[base_col].mean()),
+                    key=f"{base_col}_{i}"  # ✅ FIX duplicate key
+                )
+            else:
+                val = st.selectbox(
+                    base_col,
+                    df[base_col].dropna().unique(),
+                    key=f"{base_col}_{i}"  # ✅ FIX duplicate key
+                )
 
         input_data[base_col] = val
-        i += 1
 
     # -------- Prediction --------
     if st.button("🚀 Predict"):
@@ -163,6 +157,7 @@ elif section == "🔮 Prediction":
         df_input = pd.DataFrame([input_data])
         df_input = pd.get_dummies(df_input)
 
+        # Match training columns
         for col in columns:
             if col not in df_input:
                 df_input[col] = 0
@@ -173,16 +168,24 @@ elif section == "🔮 Prediction":
 
         st.markdown("---")
 
-        if pred in [1, "Yes"]:
+        # ✅ Safer output
+        st.subheader("Prediction Result")
+        st.write(f"Output: {pred}")
+
+        # Optional classification styling
+        if str(pred).lower() in ["1", "yes", "true"]:
             st.error("⚠️ High Risk")
         else:
             st.success("✅ Low Risk")
 
+        # Probability (if available)
         if hasattr(model, "predict_proba"):
-            prob = model.predict_proba(df_input)[0][1]
+            prob = model.predict_proba(df_input)[0]
 
-            st.metric("Confidence", f"{prob*100:.2f}%")
-            st.progress(float(prob))
+            confidence = max(prob)
+            st.metric("Confidence", f"{confidence*100:.2f}%")
+            st.progress(float(confidence))
+
 # ---------------- INSIGHTS ----------------
 elif section == "📈 Insights":
 
