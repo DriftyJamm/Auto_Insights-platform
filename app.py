@@ -132,6 +132,7 @@ elif section == "🔮 Prediction":
     for col in top_features:
 
         base_col = col.split("_")[0]
+        base_col = base_col.strip()
 
         if base_col not in df.columns:
             continue
@@ -142,13 +143,15 @@ elif section == "🔮 Prediction":
                 base_col,
                 float(df[base_col].min()),
                 float(df[base_col].max()),
-                float(df[base_col].mean())
+                float(df[base_col].mean()),
+                key=f"{base_col}_{i}"
             )
 
         else:
             val = cols[i % 2].selectbox(
                 base_col,
-                df[base_col].dropna().unique()
+                df[base_col].dropna().unique(),
+                key=f"{base_col}_{i}"
             )
 
         input_data[base_col] = val
