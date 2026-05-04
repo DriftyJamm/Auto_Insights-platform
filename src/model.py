@@ -161,6 +161,19 @@ def train_model(df):
             fig3.update_layout(template="plotly_dark", height=400)
 
             st.plotly_chart(fig3, use_container_width=True)
+            # Save top 8 important features
+     if hasattr(best_model, "feature_importances_"):
+        feat_df = pd.DataFrame({
+            "Feature": X.columns,
+            "Importance": best_model.feature_importances_
+        }).sort_values(by="Importance", ascending=False)
+
+        top_features = feat_df["Feature"].head(8).tolist()
+        st.session_state.top_features = top_features
+    else:
+        st.session_state.top_features = X.columns[:8].tolist()
+
+        
 
         # ---------------- SAVE MODEL ----------------
         st.session_state.model = best_model
