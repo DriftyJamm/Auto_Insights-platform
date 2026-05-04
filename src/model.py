@@ -77,6 +77,10 @@ def train_model(df):
 
             df_res = pd.DataFrame(results).sort_values(by="Accuracy", ascending=False)
 
+        st.session_state.model = best_model
+        st.session_state.columns = X.columns
+        st.session_state.original_df = df   # 👈 VERY IMPORTANT
+
         # ---------------- RESULTS ----------------
         st.success("✅ Models trained successfully!")
 
