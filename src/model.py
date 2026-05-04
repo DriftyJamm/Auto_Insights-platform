@@ -31,7 +31,7 @@ def train_model(df):
     # Convert categorical → numeric
     X = pd.get_dummies(X)
 
-    # Limit size for Streamlit cloud
+    # Limit size for performance
     if len(X) > 2000:
         X = X.sample(2000, random_state=42)
         y = y.loc[X.index]
@@ -53,6 +53,8 @@ def train_model(df):
             results = []
             best_model = None
             best_score = 0
+            best_preds = None
+            best_name = ""
 
             for name, model in models.items():
 
@@ -77,9 +79,24 @@ def train_model(df):
 
             df_res = pd.DataFrame(results).sort_values(by="Accuracy", ascending=False)
 
+        # ---------------- SAVE CORE DATA ----------------
         st.session_state.model = best_model
         st.session_state.columns = X.columns
-        st.session_state.original_df = df   # 👈 VERY IMPORTANT
+        st.session_state.original_df = df
+
+        # ---------------- FEATURE IMPORTANCE + TOP FEATURES ----------------
+        if hasattr(best_model, "feature_importances_"):
+
+            feat_df = pd.DataFrame({
+                "Feature": X.columns,
+                "Importance": best_model.feature_importances_
+            }).sort_values(by="Importance", ascending=False)
+
+            top_features = feat_df["Feature"].head(8).tolist()
+            st.session_state.top_features = top_features
+
+        else:
+            st.session_state.top_features = X.columns[:8].tolist()
 
         # ---------------- RESULTS ----------------
         st.success("✅ Models trained successfully!")
@@ -97,15 +114,10 @@ def train_model(df):
             y="Model",
             orientation="h",
             text="Accuracy",
-            title="📊 Model Performance Comparison"
+            title="📊 Model Performance"
         )
 
-        fig.update_layout(
-            template="plotly_dark",
-            height=350,
-            margin=dict(l=20, r=20, t=40, b=20)
-        )
-
+        fig.update_layout(template="plotly_dark", height=300)
         fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
 
         st.plotly_chart(fig, use_container_width=True)
@@ -117,11 +129,10 @@ def train_model(df):
             y="Accuracy",
             text="Model",
             size="Accuracy",
-            title="📈 Accuracy vs Cross-Validation"
+            title="📈 CV vs Accuracy"
         )
 
-        fig2.update_layout(template="plotly_dark", height=350)
-
+        fig2.update_layout(template="plotly_dark", height=300)
         st.plotly_chart(fig2, use_container_width=True)
 
         # ---------------- CONFUSION MATRIX ----------------
@@ -134,51 +145,26 @@ def train_model(df):
             colorscale="Blues"
         )
 
-        fig_cm.update_layout(
-            title="Confusion Matrix",
-            template="plotly_dark",
-            height=350
-        )
-
+        fig_cm.update_layout(template="plotly_dark", height=300)
         st.plotly_chart(fig_cm, use_container_width=True)
 
-        # ---------------- FEATURE IMPORTANCE ----------------
+        # ---------------- FEATURE IMPORTANCE GRAPH ----------------
         if hasattr(best_model, "feature_importances_"):
 
-            feat_df = pd.DataFrame({
-                "Feature": X.columns,
-                "Importance": best_model.feature_importances_
-            }).sort_values(by="Importance", ascending=False).head(10)
+            top_feat_df = feat_df.head(10)
 
             fig3 = px.bar(
-                feat_df,
+                top_feat_df,
                 x="Importance",
                 y="Feature",
                 orientation="h",
-                title="🔥 Top Feature Importance"
+                title="🔥 Top Features"
             )
 
-            fig3.update_layout(template="plotly_dark", height=400)
-
+            fig3.update_layout(template="plotly_dark", height=350)
             st.plotly_chart(fig3, use_container_width=True)
-            # Save top 8 important features
-     if hasattr(best_model, "feature_importances_"):
-        feat_df = pd.DataFrame({
-            "Feature": X.columns,
-            "Importance": best_model.feature_importances_
-        }).sort_values(by="Importance", ascending=False)
 
-        top_features = feat_df["Feature"].head(8).tolist()
-        st.session_state.top_features = top_features
-    else:
-        st.session_state.top_features = X.columns[:8].tolist()
-
-        
-
-        # ---------------- SAVE MODEL ----------------
-        st.session_state.model = best_model
-        st.session_state.columns = X.columns
-
+        # ---------------- SAVE MODEL FILE ----------------
         with open("model.pkl", "wb") as f:
             pickle.dump(best_model, f)
 
