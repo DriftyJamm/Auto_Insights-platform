@@ -111,58 +111,80 @@ elif section == "🤖 Model":
 # ---------------- PREDICTION ----------------
 elif section == "🔮 Prediction":
 
-    st.markdown("## 🔮 Prediction")
+    st.markdown("## 🔮 Smart Prediction")
 
     if "model" not in st.session_state:
-        st.info("👈 Train model first")
-    else:
+        st.warning("Train model first")
+        st.stop()
 
-        col1, col2 = st.columns(2)
+    model = st.session_state.model
+    columns = st.session_state.columns
+    df = st.session_state.original_df
 
-        with col1:
-            tenure = st.slider("Tenure", 0, 72, 12)
-            monthly = st.number_input("Monthly Charges", value=50.0)
+    st.write("### Enter Input Data")
 
-        with col2:
-            gender = st.selectbox("Gender", ["Male", "Female"])
-            contract = st.selectbox("Contract", ["Month-to-month", "One year", "Two year"])
+    input_data = {}
 
-        input_dict = {
-            "tenure": tenure,
-            "monthly_charges": monthly,
-            "gender": gender,
-            "Contract": contract
-        }
+    cols = st.columns(3)
 
-        if st.button("Predict"):
+    i = 0
 
-            df_input = pd.DataFrame([input_dict])
-            df_input = pd.get_dummies(df_input)
+    for col in df.columns:
 
-            for col in st.session_state.columns:
-                if col not in df_input:
-                    df_input[col] = 0
+        if col == df.columns[-1]:  # skip target column
+            continue
 
-            df_input = df_input[st.session_state.columns]
+        unique_vals = df[col].dropna().unique()
 
-            model = st.session_state.model
-            pred = model.predict(df_input)[0]
+        # ---------- NUMERIC ----------
+        if pd.api.types.is_numeric_dtype(df[col]):
 
-            if hasattr(model, "predict_proba"):
-                prob = model.predict_proba(df_input)[0][1]
-            else:
-                prob = None
+            val = cols[i % 3].number_input(
+                f"{col}",
+                float(df[col].mean())
+            )
 
-            st.markdown("---")
+        # ---------- CATEGORICAL ----------
+        else:
 
-            if pred in [1, "Yes"]:
-                st.error("⚠️ High Risk")
-            else:
-                st.success("✅ Low Risk")
+            val = cols[i % 3].selectbox(
+                f"{col}",
+                unique_vals
+            )
 
-            if prob:
-                st.metric("Confidence", f"{prob*100:.2f}%")
-                st.progress(float(prob))
+        input_data[col] = val
+        i += 1
+
+    # ---------- PREDICT ----------
+    if st.button("Predict"):
+
+        df_input = pd.DataFrame([input_data])
+
+        # Convert to dummies
+        df_input = pd.get_dummies(df_input)
+
+        # Match training columns
+        for col in columns:
+            if col not in df_input:
+                df_input[col] = 0
+
+        df_input = df_input[columns]
+
+        pred = model.predict(df_input)[0]
+
+        st.markdown("---")
+
+        if pred in [1, "Yes"]:
+            st.error("⚠️ High Risk / Negative Outcome")
+        else:
+            st.success("✅ Low Risk / Positive Outcome")
+
+        # Probability (if available)
+        if hasattr(model, "predict_proba"):
+            prob = model.predict_proba(df_input)[0][1]
+
+            st.metric("Confidence", f"{prob*100:.2f}%")
+            st.progress(float(prob))
 
 # ---------------- INSIGHTS ----------------
 elif section == "📈 Insights":
