@@ -120,50 +120,46 @@ elif section == "🔮 Prediction":
     model = st.session_state.model
     columns = st.session_state.columns
     df = st.session_state.original_df
+    top_features = st.session_state.top_features
 
-    st.write("### Enter Input Data")
+    st.write("### Enter Key Inputs")
 
     input_data = {}
-
-    cols = st.columns(3)
+    cols = st.columns(2)
 
     i = 0
 
-    for col in df.columns:
+    for col in top_features:
 
-        if col == df.columns[-1]:  # skip target column
+        base_col = col.split("_")[0]
+
+        if base_col not in df.columns:
             continue
 
-        unique_vals = df[col].dropna().unique()
+        if pd.api.types.is_numeric_dtype(df[base_col]):
 
-        # ---------- NUMERIC ----------
-        if pd.api.types.is_numeric_dtype(df[col]):
-
-            val = cols[i % 3].number_input(
-                f"{col}",
-                float(df[col].mean())
+            val = cols[i % 2].slider(
+                base_col,
+                float(df[base_col].min()),
+                float(df[base_col].max()),
+                float(df[base_col].mean())
             )
 
-        # ---------- CATEGORICAL ----------
         else:
-
-            val = cols[i % 3].selectbox(
-                f"{col}",
-                unique_vals
+            val = cols[i % 2].selectbox(
+                base_col,
+                df[base_col].dropna().unique()
             )
 
-        input_data[col] = val
+        input_data[base_col] = val
         i += 1
 
-    # ---------- PREDICT ----------
-    if st.button("Predict"):
+    # -------- Prediction --------
+    if st.button("🚀 Predict"):
 
         df_input = pd.DataFrame([input_data])
-
-        # Convert to dummies
         df_input = pd.get_dummies(df_input)
 
-        # Match training columns
         for col in columns:
             if col not in df_input:
                 df_input[col] = 0
@@ -175,17 +171,15 @@ elif section == "🔮 Prediction":
         st.markdown("---")
 
         if pred in [1, "Yes"]:
-            st.error("⚠️ High Risk / Negative Outcome")
+            st.error("⚠️ High Risk")
         else:
-            st.success("✅ Low Risk / Positive Outcome")
+            st.success("✅ Low Risk")
 
-        # Probability (if available)
         if hasattr(model, "predict_proba"):
             prob = model.predict_proba(df_input)[0][1]
 
             st.metric("Confidence", f"{prob*100:.2f}%")
             st.progress(float(prob))
-
 # ---------------- INSIGHTS ----------------
 elif section == "📈 Insights":
 
