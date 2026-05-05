@@ -194,9 +194,9 @@ elif section == "🔮 Prediction":
         st.write(f"Output: {pred}")
 
         if str(pred).lower() in ["1", "yes", "true"]:
-            st.error("⚠️ High Risk of Churn")
+            st.error("High Risk")
         else:
-            st.success("✅ Low Risk of Churn")
+            st.success("Low Risk")
 
         # ---------------- CONFIDENCE ----------------
         if hasattr(model, "predict_proba"):
